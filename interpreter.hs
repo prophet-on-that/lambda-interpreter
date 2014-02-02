@@ -1,7 +1,7 @@
 data Term 
   = Var Char | Lambda Char Term | App Term Term
   deriving
-    Show
+    (Show, Eq)
 
 i :: Term
 i 
@@ -48,9 +48,18 @@ substitute (Lambda var' t1) var t2
   | not (elem var' (freeVars t2))
     = Lambda var' (substitute t1 var t2)
 
--- Beta-reduction of a term
-reduce :: Term -> Term
-reduce (App (Lambda var t1) t2)
-  = substitute t1 var t2
-reduce t1
-  = t1
+-- Attempt to reduce term to (Beta) normal form. Not guaranteed to terminate!
+normalise :: Term -> Term
+normalise (Var var)
+  = (Var var)
+normalise (Lambda var t1)
+  = Lambda var (normalise t1)
+normalise (App (Lambda var t1) t2)
+  = normalise (substitute t1 var (normalise t2))
+normalise (App t1 t2)
+  | t1 /= r1 || t2 /= r2
+    = normalise (App r1 r2)
+  | otherwise 
+    = App r1 r2
+  where 
+    [r1, r2] = map normalise [t1, t2]
