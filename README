@@ -1,1 +1,46 @@
-Lambda calculus interpreter in Haskell
+Lambda calculus interpreter, implemented in Haskell. Supports a rudimentary
+Beta-normaliser with no reduction cycle detection or depth limit (so may not
+terminate), and pretty printing of lambda terms.
+
+Usage: ghci interpreter.hs (or whatever you Haskell with)
+
+Examples
+
+i, k and s substitute the lambda equivalents of the standard combinators
+  *Main> i
+  I
+
+  *Main> App s i
+  SI
+
+  *Main> App i (Var 'x')
+  Ix
+
+  *Main> normalise (App i (Var 'x'))
+  x
+
+  *Main> normalise (App s i)
+  \yz.z(yz)
+
+  *Main> normalise (App k (Var 'y'))
+  \a.y
+
+  *Main> App (App k s) i
+  KSI
+
+  *Main> normalise (App (App k s) i)
+  S
+
+The fixed-point combinator
+  *Main> y
+  \f.(\x.f(xx))(\x.f(xx))
+
+Non-terminating example: application of fixed-point combinator to function
+obviously doesn't terminate
+  *Main> normalise (App y s)
+  <Interrupted>
+
+Extensions
+
+A parse method - parse :: [Char] -> Term, including support for reading
+combinators embedded in the lambda term, would make entering terms MUCH easier.
