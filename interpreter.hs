@@ -89,6 +89,13 @@ s
       )
     )
 
+y :: Term
+y 
+  = Lambda 'f' (App t1 t1)
+  where 
+    t1 
+      = Lambda 'x' (App (Var 'f') (App (Var 'x') (Var 'x')))
+
 -- Returns a list of free variables in a term
 freeVars :: Term -> [Char]
 freeVars (Var var)
