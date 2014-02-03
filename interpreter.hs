@@ -1,7 +1,74 @@
+-- If no outer parentheses exist leave unchanged
+removeOuterBrackets :: [Char] -> [Char]
+removeOuterBrackets str 
+  | beginning == "(" && end == ")"
+    = middle
+  | otherwise 
+    = str
+  where
+    (beginning, headless)
+      = splitAt 1 str
+    (middle, end)
+      = splitAt ((length headless) - 1) headless
+
+bracket :: [Char] -> [Char]
+bracket str 
+  = "(" ++ str ++ ")"
+
 data Term 
   = Var Char | Lambda Char Term | App Term Term
   deriving
-    (Show, Eq)
+    Eq
+
+instance Show Term where
+  show t
+    = removeOuterBrackets (show' t)
+    where 
+      show' 
+        = bracket . show'' 
+      show'' (Lambda x (Var x'))
+        | x == x' 
+            = "I"
+      show'' (Lambda x (Lambda y (Var x')))
+        | x == x'
+            = "K"
+      show'' (Lambda x (Lambda y (Lambda z (App (App (Var x') (Var z')) (App (Var y') (Var z''))))))
+        | x == x' && y == y' && z == z' && z' == z''
+            = "S"
+      show'' (Var var) 
+        = [var]
+      show'' (Lambda var t1)
+        | head == "\\"
+            = "\\" ++ [var] ++ tail
+        | otherwise
+            = "\\" ++ [var] ++ "." ++ str
+        where
+          str
+            = removeOuterBrackets (show' t1)
+          (head, tail) 
+            = splitAt 1 str
+      show'' (App (Var var) (Var var'))
+        = [var] ++ [var']
+      show'' (App t1 t2)
+        -- An abstraction as the left-hand of the application should not be
+        -- de-bracketed
+        | str1 !! 1 == '\\' 
+            = str1 ++ str2
+        | otherwise 
+            = (removeOuterBrackets str1) ++ str2
+        where
+          str1
+            = show' t1
+          str2 
+            = debracketIfSingleton (show' t2)
+          -- We don't need brackets around a single variable in the right hand
+          -- side of an application
+          -- Pre: expect str to be bracketed
+          debracketIfSingleton str
+            | length str == 3
+                = removeOuterBrackets str
+            | otherwise
+                = str
 
 i :: Term
 i 
