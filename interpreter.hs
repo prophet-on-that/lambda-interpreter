@@ -1,3 +1,5 @@
+import Data.List
+
 -- If no outer parentheses exist leave unchanged
 removeOuterBrackets :: [Char] -> [Char]
 removeOuterBrackets str 
@@ -105,6 +107,14 @@ freeVars (App t1 t2)
 freeVars (Lambda var t1)
   = filter (/= var) (freeVars t1)
 
+-- Given a list of variable names, return a fresh variable name. Number of
+-- distinct chars is limited, so invalid when all variable names are exhaused.
+-- We work with only lowercase alphabetical characters, to avoid confusion with
+-- the shorhand combinators S, K and I
+fresh :: [Char] -> Char
+fresh 
+  = head . (['a'..'z'] \\)
+
 -- Replaces all instances of var with t2 in the given term
 substitute :: Term -> Char -> Term -> Term
 substitute (Var var') var t2
@@ -119,8 +129,16 @@ substitute (Lambda var' t1) var t2
   -- name makes the result of the substitution more explicit
   | var' == var
     = Lambda var (substitute t1 var' (Var var)) 
-  | not (elem var' (freeVars t2))
+  | not (elem var' free)
     = Lambda var' (substitute t1 var t2)
+    -- Construct alpha-equivalent function first, before making substitution
+  | otherwise
+    = substitute (Lambda new (substitute t1 var' (Var new))) var t2
+    where
+      free 
+        = freeVars t2
+      new 
+        = fresh free
 
 -- Attempt to reduce term to (Beta) normal form. Not guaranteed to terminate!
 normalise :: Term -> Term
